@@ -10,10 +10,14 @@ import BpmnViewer from "bpmn-js/lib/NavigatedViewer";
 
 // import EmbeddedComments from "bpmn-js-embedded-comments";
 import EmbeddedComments from "./modules/copied-comments-module";
+import SDocumentation from "./modules/my-documentation-module";
+import sistemivModdleExtensions from "../moddleExtensions/sistemiv.json";
+// import CamundaBpmnModdle from "camunda-bpmn-moddle/resources/camunda.json";
 
 var viewer = new BpmnViewer({
   container: "#canvas",
-  additionalModules: [EmbeddedComments],
+  additionalModules: [EmbeddedComments, SDocumentation],
+  // moddleExtensions: [CamundaBpmnModdle],
 });
 
 async function openDiagram(diagram) {
