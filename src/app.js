@@ -12,12 +12,15 @@ import BpmnViewer from "bpmn-js/lib/NavigatedViewer";
 import EmbeddedComments from "./modules/copied-comments-module";
 import SDocumentation from "./modules/my-documentation-module";
 import sistemivModdleExtensions from "../moddleExtensions/sistemiv.json";
-// import CamundaBpmnModdle from "camunda-bpmn-moddle/resources/camunda.json";
+import CamundaBpmnModdle from "camunda-bpmn-moddle/resources/camunda.json";
 
 var viewer = new BpmnViewer({
   container: "#canvas",
-  additionalModules: [EmbeddedComments, SDocumentation],
-  // moddleExtensions: [CamundaBpmnModdle],
+  additionalModules: [SDocumentation],
+  moddleExtensions: {
+    camunda: CamundaBpmnModdle,
+    sistemiv: sistemivModdleExtensions,
+  },
 });
 
 async function openDiagram(diagram) {
@@ -50,12 +53,14 @@ async function serialize() {
   }
 }
 
-viewer.on("comments.updated", serialize);
+// viewer.on("comments.updated", serialize);
 viewer.on("commandStack.changed", serialize);
+viewer.on("documentation.open", (e) => console.log(e));
+viewer.on("form.open", (e) => console.log(e));
 
-viewer.on("canvas.click", function () {
-  viewer.get("comments").collapseAll();
-});
+// viewer.on("canvas.click", function () {
+//   viewer.get("comments").collapseAll();
+// }); VEOMA INTERESANTAN KOD, POZIVA MODULE comments sa .get.... interesting?
 
 // file open handling
 

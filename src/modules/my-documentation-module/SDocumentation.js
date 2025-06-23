@@ -1,65 +1,91 @@
 import { getBusinessObject, is } from "bpmn-js/lib/util/ModelUtil";
-import {
-  getExtensionElementsList,
-  getDocumentationDefinition,
-  getDocumentationTemplate,
-  isSupported,
-} from "./util";
+import { getDocumentationTemplate, getDocumentationMarkdown } from "./util";
 import { get } from "min-dash";
 
 export default function SDocumentation(eventBus, overlays, bpmnjs) {
+  function createOrUpdateOverlay(element, { formRef, documentationMarkdown }) {
+    let overlayEntry = overlays.get({ element, type: "sistemiv" })[0];
+    let overlay;
+
+    if (overlayEntry) {
+      overlay = overlayEntry.html;
+    } else {
+      overlay = document.createElement("div");
+      overlay.className = "sistemiv-overlay";
+
+      overlays.add(element, "sistemiv", {
+        position: {
+          bottom: 10,
+          right: 10,
+        },
+        html: overlay,
+      });
+    }
+
+    if (
+      documentationMarkdown &&
+      !overlay.querySelector(".sistemiv-overlay-documentation")
+    ) {
+      const docButton = document.createElement("div");
+      docButton.className = "sistemiv-overlay-documentation";
+      docButton.innerHTML =
+        '<span class="sistemiv-overlay-documentation-icon"></span>' +
+        '<span class="sistemiv-overlay-documentation-text">Documentation</span>';
+      docButton.addEventListener("click", () => {
+        eventBus.fire("documentation.open", {
+          element,
+          markdown: documentationMarkdown,
+        });
+      });
+      overlay.appendChild(docButton);
+    }
+
+    if (formRef && !overlay.querySelector(".sistemiv-overlay-form")) {
+      const formButton = document.createElement("div");
+      formButton.className = "sistemiv-overlay-form";
+      formButton.innerHTML =
+        '<span class="sistemiv-overlay-form-icon"></span>' +
+        '<span class="sistemiv-overlay-form-text">Form</span>';
+      formButton.addEventListener("click", () => {
+        eventBus.fire("form.open", {
+          element,
+          formRef,
+        });
+      });
+      overlay.appendChild(formButton);
+    }
+  }
+
   eventBus.on("shape.added", function (event) {
     const element = event.element;
     const businessObject = getBusinessObject(element);
-    const extensionElementsList = getExtensionElementsList(
-      businessObject,
-      undefined
-    );
-    const documentationTempalte = getDocumentationTemplate(element);
 
-    if (is(element, "bpmn:Process") && !!documentationTempalte) {
-      // upsi dokumentaciju pa return
-      // return;
+    const documentationMarkdown =
+      getDocumentationTemplate(element) && getDocumentationMarkdown(element);
+    const formRef =
+      is(element, "bpmn:UserTask") && businessObject.get("camunda:formRef");
+
+    if (documentationMarkdown || formRef) {
+      defer(() =>
+        createOrUpdateOverlay(element, {
+          formRef,
+          documentationMarkdown,
+        })
+      );
     }
-
-    if (!!documentationTempalte) {
-      // upsi dokumentaciju
-    }
-
-    if (is(element, "bpmn:UserTask")) {
-      console.log("yes");
-      console.log(element);
-    }
-
-    // defer(function() {
-    //   createCommentBox(element);
-    // });
   });
 }
 
 SDocumentation.$inject = ["eventBus", "overlays", "bpmnjs"];
 
-// helpers ///////////////
+// helpers
 
 function defer(fn) {
   setTimeout(fn, 0);
 }
 
-function getOverlayHtml(translate) {
-  return (
-    '<div class="comments-overlay">' +
-    '<div class="toggle">' +
-    '<span class="icon-comment"></span>' +
-    '<span class="comment-count" data-comment-count></span>' +
-    "</div>" +
-    '<div class="content">' +
-    '<div class="comments"></div>' +
-    '<div class="edit">' +
-    `<textarea tabindex="1" placeholder="${translate(
-      "Add a comment"
-    )}"></textarea>` +
-    "</div>" +
-    "</div>" +
-    "</div>"
-  );
+function getOverlayHtml() {
+  const div = document.createElement("div");
+  div.className = "sistemiv-overlay";
+  return div;
 }

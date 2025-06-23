@@ -27,6 +27,12 @@ export function getDocumentationTemplate(element) {
   return documentation && documentation.get("template");
 }
 
+export function getDocumentationMarkdown(element) {
+  // ocekuje shape
+  const documentation = getDocumentationDefinition(element);
+  return documentation && documentation.get("markdown");
+}
+
 export function isSupported(element) {
   // element je Shape tip
   return (
